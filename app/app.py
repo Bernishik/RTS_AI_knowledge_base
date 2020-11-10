@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 from config import Config
-from db import add_triplets_to_db,get_query_item
+from db import add_triplets_to_db,get_query_item,shortest_way
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -23,6 +23,13 @@ def add_triplets():
 def get_item():
     data = request.get_json(force=True)
     result = get_query_item(data)
+    return  result
+
+@app.route('/shortest_way',methods=["POST"])
+def shortest():
+    data = request.get_json(force=True)
+    print(data)
+    result = shortest_way(data)
     return  result
 
 

@@ -11,7 +11,7 @@ graph_pass = environ.get("NEO4J_PASSWORD")
 
 while True:
     try:
-        g = Graph(graph_url,name=graph_login,password=graph_pass)
+        g = Graph(graph_url, name=graph_login, password=graph_pass)
         break
     except ConnectionRefusedError:
         sleep(1)
@@ -47,7 +47,7 @@ def add_triplets_to_db(json):
         a = Node(triplet["node1"]['label'], **triplet["node1"])
         b = Node(triplet["node2"]['label'], **triplet["node2"])
         rel = Relationship.type(triplet["relation"]["name"])
-        g.merge(rel(a, b), "node_lab", "name")
+        g.merge(rel(a, b), a.get("label"), "name")
     tx.commit()
 
 
@@ -78,4 +78,43 @@ def get_query_item(node):
         data["name"] = type(data).__name__
         rel = dict(data)
         result["triplets"].append({"node1": dict(node1), "node2": dict(node2), "relation": rel})
+    return result
+
+
+"""
+Parameters:
+
+    node1:  json or dict with 2 node info
+    nodes = {
+        "node1":{
+            "name":"name",
+        ...
+        },
+        "node2":{
+            "name":"name",
+        ...
+    }
+    }
+RETURNS:
+    result: json triplets
+"""
+
+
+def shortest_way(nodes):
+    result = {
+        "triplets": []
+    }
+    node_matcher = NodeMatcher(g)
+    node1 = node_matcher.match(**nodes["node1"]).first()
+    node2 = node_matcher.match(**nodes["node2"]).first()
+    try:
+        items = g.run("MATCH path = shortestpath((a)-[*]->(b)) WHERE a.name=$node1 AND b.name=$node2 RETURN path",
+                      node1=node1["name"], node2=node2["name"])
+    except TypeError:
+        return None
+    items_data = items.data()
+    for triplet in items_data[0]['path']:
+        node1, node2 = triplet.nodes
+        rel = list(triplet.types())[0]
+        result["triplets"].append({"node1": dict(node1), "node2": dict(node2), "relation": {"name": rel}})
     return result
