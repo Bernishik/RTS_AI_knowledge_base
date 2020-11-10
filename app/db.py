@@ -1,3 +1,5 @@
+from time import sleep
+
 from py2neo import Graph, Node, Relationship, NodeMatcher
 from dotenv import load_dotenv
 from os import environ
@@ -7,7 +9,12 @@ graph_url = environ.get("NEO4J_HOST")
 graph_login = environ.get("NEO4J_LOGIN")
 graph_pass = environ.get("NEO4J_PASSWORD")
 
-g = Graph(graph_url,name=graph_login,password=graph_pass)
+while True:
+    try:
+        g = Graph(graph_url,name=graph_login,password=graph_pass)
+        break
+    except ConnectionRefusedError:
+        sleep(1)
 
 """
 Parameters:
