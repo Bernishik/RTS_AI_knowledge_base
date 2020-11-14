@@ -30,13 +30,7 @@ def get_item():
 @app.route('/shortest_way', methods=["POST"])
 def shortest_way():
     data = request.get_json(force=True)
-    label_1, label_2 = None, None
-    if "label_1" in data:
-        label_1 = data['label_1']
-    if "label_2" in data:
-        label_2 = data['label_2']
-
-    result = shortest_way_label(data, label_1=label_1, label_2=label_2)
+    result = shortest_way_label(data)
     return result
 
 

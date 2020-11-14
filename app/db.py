@@ -1,6 +1,5 @@
 from time import sleep
-import json
-from py2neo import Graph, Node, Relationship, NodeMatcher
+from py2neo import Graph, Node, Relationship
 from dotenv import load_dotenv
 from os import environ
 
@@ -57,34 +56,44 @@ Parameters:
     node:  json or dict with  node info
     node = {
     "name":"name",
+    "label":"LABEL" #(optional)
     ...
     }
 RETURNS:
-    result: json triplets
+    result: json triplets and main_node
 """
 
 
 def get_query_item(node):
     result = {
+        "main_node": {},
         "triplets": []
     }
-    node_matcher = NodeMatcher(g)
-    node = node_matcher.match(**node).first()
-    items = g.run("MATCH (n{name:$name})-[r]-() RETURN r", name=node["name"])
+    query = "MATCH (n{name:$name})-[r]-() "
+    label = None
+
+    if "label" in node:
+        label = node['label']
+        query += "WHERE $label IN LABELS(n)"
+    query += "RETURN r,n"
+    items = g.run(query, name=node["name"], label=label)
     items_data = items.data()
+    if not items_data:
+        return result
     for item in items_data:
         data = item["r"]
         node1, node2 = data.nodes
         data["name"] = type(data).__name__
         rel = dict(data)
         result["triplets"].append({"node1": dict(node1), "node2": dict(node2), "relation": rel})
+    result["main_node"] = dict(items_data[0]["n"])
     return result
 
 
 """
 Parameters:
 
-    node1:  json or dict with 2 node info
+    nodes:  json or dict with 2 node info and labels(optional)
     nodes = {
         "node1":{
             "name":"name",
@@ -102,11 +111,16 @@ RETURNS:
 """
 
 
-def shortest_way_label(nodes, label_1=None, label_2=None):
+def shortest_way_label(nodes):
     query = "MATCH (a {name: $name_a}), (b {name: $name_b}), path = shortestpath((a)-[*]-(b))"
     result = {
         "triplets": []
     }
+    label_1, label_2 = None, None
+    if "label_1" in nodes:
+        label_1 = nodes['label_1']
+    if "label_2" in nodes:
+        label_2 = nodes['label_2']
 
     if label_1 and label_2 is not None:
         query += "WHERE "
