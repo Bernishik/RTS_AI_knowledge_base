@@ -1,5 +1,5 @@
 from time import sleep
-
+import json
 from py2neo import Graph, Node, Relationship, NodeMatcher
 from dotenv import load_dotenv
 from os import environ
@@ -93,26 +93,44 @@ Parameters:
         "node2":{
             "name":"name",
         ...
-    }
+        },
+        "label_1":"LABEL", #(optional)
+        "label_2":"LABEL"  #(optional)
     }
 RETURNS:
     result: json triplets
 """
 
 
-def shortest_way(nodes):
+def shortest_way_label(nodes, label_1=None, label_2=None):
+    query = "MATCH (a {name: $name_a}), (b {name: $name_b}), path = shortestpath((a)-[*]-(b))"
     result = {
         "triplets": []
     }
-    node_matcher = NodeMatcher(g)
-    node1 = node_matcher.match(**nodes["node1"]).first()
-    node2 = node_matcher.match(**nodes["node2"]).first()
+
+    if label_1 and label_2 is not None:
+        query += "WHERE "
+        if label_1 is not None:
+            query += "$Label_1 IN LABELS(a) "
+            if label_2 is not None:
+                query += " AND "
+        if label_2 is not None:
+            query += "$Label_2 IN LABELS(b)"
+
+    query += ' RETURN path'
+
     try:
-        items = g.run("MATCH path = shortestpath((a)-[*]->(b)) WHERE a.name=$node1 AND b.name=$node2 RETURN path",
-                      node1=node1["name"], node2=node2["name"])
+        items = g.run(
+            query,
+            name_a=nodes['node1']['name'], name_b=nodes['node2']['name'],
+            Label_1=label_1, Label_2=label_2
+        )
     except TypeError:
         return None
     items_data = items.data()
+    if not items_data:
+        return result
+
     for triplet in items_data[0]['path']:
         node1, node2 = triplet.nodes
         rel = list(triplet.types())[0]
