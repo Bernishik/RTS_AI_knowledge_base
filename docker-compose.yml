@@ -12,6 +12,8 @@ services:
 
   app:
     build: app/
+    volumes:
+      - ./home/extracted:/home/extracted
     restart: unless-stopped
     depends_on:
       - db

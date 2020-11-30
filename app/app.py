@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from config import Config
 from db import add_triplets_to_db, get_query_item, shortest_way_label
-
+import os, json
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -18,6 +18,16 @@ def add_triplets():
         data = request.get_json(force=True)
         add_triplets_to_db(data)
         return render_template('index.html')
+
+# TEMP
+@app.route('/add_triplets_from_directory', methods=["GET"])
+def add_triplets_from_directory():
+    if request.method == "GET":
+        path = "/home/extracted/output_triplets.json"
+        with open(path) as file:
+            data = json.load(file)
+        add_triplets_to_db(data)
+    return render_template('index.html')
 
 
 @app.route('/get_item', methods=["POST"])
