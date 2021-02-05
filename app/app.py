@@ -11,7 +11,7 @@ def index():
     return render_template('index.html')
 
 
-# REST methon add triplets in graph
+# REST method add triplets in graph
 @app.route('/add_triplets', methods=["POST"])
 def add_triplets():
     if request.method == "POST":
@@ -20,11 +20,17 @@ def add_triplets():
         return render_template('index.html')
 
 
-@app.route('/get_item', methods=["POST"])
+@app.route('/get_item', methods=["POST", "GET"])
 def get_item():
     data = request.get_json(force=True)
-    result = get_query_item(data)
-    return result
+    try:
+        if data['name'] is not None:
+            result = get_query_item(data)
+            return result
+        else:
+            return "Wrong input data."
+    except KeyError:
+        return "Wrong input data."
 
 
 @app.route('/shortest_way', methods=["POST"])
@@ -36,4 +42,4 @@ def shortest_way():
 
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True, host="127.0.0.1", port="5000")

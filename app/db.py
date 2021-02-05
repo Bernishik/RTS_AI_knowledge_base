@@ -5,8 +5,8 @@ from os import environ
 
 load_dotenv()
 graph_url = environ.get("NEO4J_HOST")
-graph_login = environ.get("NEO4J_LOGIN")
-graph_pass = environ.get("NEO4J_PASSWORD")
+graph_login = "neo4j"
+graph_pass = "226235"
 
 while True:
     try:

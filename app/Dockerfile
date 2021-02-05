@@ -5,4 +5,4 @@ ADD . /app
 WORKDIR /app
 EXPOSE 5000
 #ENTRYPOINT ["python3"]
-#CMD ["app.py"]
+CMD ["python", "app.py"]
